@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纜車賓客QR碼管理系統</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/dist/instascan.min.js"></script>
+    <style>
+        :root {
+            --primary: #4285F4;
+            --secondary: #34A853;
+            --danger: #EA4335;
+            --warning: #FBBC05;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+            --light-blue: #e3f2fd;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), #1a73e8);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        
+        .logo-icon {
+            font-size: 1.8rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        nav {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-btn i {
+            font-size: 1.2rem;
+        }
+        
+        .nav-btn:hover, .nav-btn.active {
+            background: white;
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            padding: 30px;
+            margin: 30px 0;
+            display: none;
+            animation: fadeIn 0.5s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        h2 i {
+            background: var(--light-blue);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e1e5eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn:hover {
+            background: #1a73e8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background: #2d8d4e;
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #d33426;
+            box-shadow: 0 4px 12px rgba(234, 67, 53, 0.3);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .qrcode-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 16px;
+            background: #f9fbfd;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.03);
+            border: 2px dashed #e1e5eb;
+        }
+        
+        #qrcode {
+            display: inline-block;
+            margin: 20px auto;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .scanner-container {
+            position: relative;
+            margin: 25px 0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        #scanner-video {
+            width: 100%;
+            max-width: 600px;
+            display: block;
+            margin: 0 auto;
+            background: #000;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 400px;
+            height: 100%;
+            border: 3px solid var(--warning);
+            pointer-events: none;
+        }
+        
+        .scanner-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .record-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 30px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .record-table th {
+            background: var(--primary);
+            color: white;
+            text-align: left;
+            padding: 16px;
+            font-weight: 600;
+        }
+        
+        .record-table td {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            background: white;
+        }
+        
+        .record-table tr:nth-child(even) td {
+            background: #f9fbfd;
+        }
+        
+        .record-table tr:hover td {
+            background: #f1f7ff;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .status-complete {
+            background: #e6f4ea;
+            color: var(--secondary);
+        }
+        
+        .status-pending {
+            background: #fef7e0;
+            color: var(--warning);
+        }
+        
+        .auth-form {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        
+        .form-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .message {
+            padding: 18px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .message-success {
+            background: #e6f4ea;
+            color: var(--secondary);
+            border: 1px solid #c8e6c9;
+        }
+        
+        .message-error {
+            background: #fce8e6;
+            color: var(--danger);
+            border: 1px solid #ffcdd2;
+        }
+        
+        .message-info {
+            background: #e8f0fe;
+            color: var(--primary);
+            border: 1px solid #bbdefb;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        
+        .card-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .system-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .info-card i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .info-card h3 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .info-card p {
+            color: var(--gray);
+            line-height: 1.7;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-box input {
+            min-width: 300px;
+            padding: 12px 20px;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .label {
+            font-size: 1.1rem;
+            color: var(--gray);
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            
+            .print-only {
+                display: block;
+                text-align: center;
+                margin: 20px 0;
+            }
+            
+            body {
+                background: white;
+                padding: 10px;
+            }
+            
+            .section {
+                box-shadow: none;
+                padding: 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .search-box input {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: var(--gray);
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🚠</span>
+                <span>纜車賓客QR碼管理系統</span>
+            </div>
+            <nav class="no-print">
+                <button class="nav-btn" onclick="showSection('creator-section')">
+                    <i class="fas fa-user-plus"></i> 資料輸入
+                </button>
+                <button class="nav-btn" onclick="showSection('updater-section')">
+                    <i class="fas fa-qrcode"></i> 資料更新
+                </button>
+                <button class="nav-btn" onclick="showSection('dashboard-section')">
+                    <i class="fas fa-chart-line"></i> 監控面板
+                </button>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- 系統介紹 -->
+        <div class="system-info">
+            <div class="info-card">
+                <i class="fas fa-ticket-alt"></i>
+                <h3>快速建立記錄</h3>
+                <p>只需輸入基本賓客資訊，系統即時生成專屬QR碼，方便後續追蹤與管理。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-mobile-alt"></i>
+                <h3>掃碼更新資料</h3>
+                <p>使用行動裝置掃描QR碼，即可更新離場資訊，操作簡單直覺。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-chart-bar"></i>
+                <h3>即時監控面板</h3>
+                <p>管理員可即時查看所有記錄狀態，並進行篩選與搜尋。</p>
+            </div>
+        </div>
+        
+        <!-- 創建者輸入界面 -->
+        <div id="creator-section" class="section active">
+            <h2><i class="fas fa-user-plus"></i> 賓客資料輸入</h2>
+            <div id="creator-message" class="message"></div>
+            
+            <div class="card">
+                <div class="form-group">
+                    <label for="cabinNumber"><i class="fas fa-train"></i> 車廂號碼</label>
+                    <input type="text" id="cabinNumber" placeholder="例如: C-102">
+                </div>
+                
+                <div class="form-group">
+                    <label for="guestName"><i class="fas fa-user"></i> 賓客姓名</label>
+                    <input type="text" id="guestName" placeholder="請輸入賓客全名">
+                </div>
+                
+                <div class="form-group">
+                    <label for="healthStatus"><i class="fas fa-heartbeat"></i> 健康狀況</label>
+                    <select id="healthStatus">
+                        <option value="正常">正常</option>
+                        <option value="暈眩">暈眩</option>
+                        <option value="心臟不適">心臟不適</option>
+                        <option value="外傷">外傷</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-block" onclick="createRecord()">
+                    <i class="fas fa-plus-circle"></i> 建立記錄並生成QR碼
+                </button>
+            </div>
+            
+            <div id="qrcode-result" class="qrcode-container" style="display:none;">
+                <div class="print-only">
+                    <h3>賓客QR碼憑證</h3>
+                    <p>請掃描此QR碼更新離場資訊</p>
+                </div>
+                <div id="qrcode"></div>
+                <button class="btn btn-secondary" onclick="printQRCode()">
+                    <i class="fas fa-print"></i> 列印QR碼
+                </button>
+            </div>
+        </div>
+        
+        <!-- 第三方更新界面 -->
+        <div id="updater-section" class="section">
+            <h2><i class="fas fa-qrcode"></i> 掃描QR碼更新資料</h2>
+            <div id="updater-message" class="message"></div>
+            
+            <div class="card">
+                <div class="scanner-container">
+                    <video id="scanner-video"></video>
+                    <div class="scanner-overlay"></div>
+                </div>
+                
+                <div class="scanner-controls">
+                    <button class="btn btn-secondary" onclick="startScanner()">
+                        <i class="fas fa-play"></i> 啟動掃描器
+                    </button>
+                    <button class="btn btn-danger" onclick="stopScanner()">
+                        <i class="fas fa-stop"></i> 停止掃描器
+                    </button>
+                </div>
+            </div>
+            
+            <div id="record-details" class="card" style="display:none;">
+                <h3><i class="fas fa-user-circle"></i> 賓客資訊</h3>
+                <div class="form-group">
+                    <label for="exitMethod"><i class="fas fa-walking"></i> 離場方式</label>
+                    <select id="exitMethod">
+                        <option value="步行">步行</option>
+                        <option value="輪椅">輪椅</option>
+                        <option value="救護車">救護車</option>
+                        <option value="私家車">私家車</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="transferDept"><i class="fas fa-hospital"></i> 轉送部門</label>
+                    <input type="text" id="transferDept" placeholder="例如: 急診室">
+                </div>
+                
+                <div class="form-group">
+                    <label for="destination"><i class="fas fa-map-marker-alt"></i> 目的地</label>
+                    <input type="text" id="destination" placeholder="例如: 市立醫院">
+                </div>
+                
+                <div class="form-group">
+                    <label for="exitTime"><i class="fas fa-clock"></i> 離場時間</label>
+                    <input type="datetime-local" id="exitTime">
+                </div>
+                
+                <button class="btn btn-secondary btn-block" onclick="updateRecord()">
+                    <i class="fas fa-save"></i> 更新記錄
+                </button>
+            </div>
+        </div>
+        
+        <!-- 後台監控界面 -->
+        <div id="dashboard-section" class="section">
+            <h2><i class="fas fa-chart-line"></i> 賓客資料監控面板</h2>
+            
+            <div id="login-form" class="auth-form">
+                <h3 class="form-title">管理員登入</h3>
+                <div id="login-message" class="message"></div>
+                
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> 電子郵件</label>
+                    <input type="email" id="email" placeholder="admin@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> 密碼</label>
+                    <input type="password" id="password" placeholder="請輸入密碼">
+                </div>
+                
+                <button class="btn btn-block" onclick="login()">
+                    <i class="fas fa-sign-in-alt"></i> 登入系統
+                </button>
+            </div>
+            
+            <div id="dashboard-content" style="display:none;">
+                <div class="dashboard-header">
+                    <div>
+                        <button class="btn btn-danger" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> 登出系統
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="搜尋車廂號碼或姓名" 
+                               oninput="filterRecords()">
+                        <button class="btn" onclick="loadRecords()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="number" id="totalRecords">0</div>
+                        <div class="label">總記錄數</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="number" id="completedRecords">0</div>
+                        <div class="label">已完成</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-hourglass-half"></i>
+                        <div class="number" id="pendingRecords">0</div>
+                        <div class="label">處理中</div>
+                    </div>
+                </div>
+                
+                <div id="records-table">
+                    <table class="record-table">
+                        <thead>
+                            <tr>
+                                <th>車廂號碼</th>
+                                <th>賓客姓名</th>
+                                <th>健康狀況</th>
+                                <th>離場方式</th>
+                                <th>狀態</th>
+                                <th>建立時間</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-list">
+                            <!-- 記錄將動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>纜車賓客QR碼管理系統 &copy; 2023 - 安全、高效、便捷的賓客管理解決方案</p>
+    </footer>
+
+    <script>
+        // Firebase配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgSaPKhaaX9cP1tY-ThykJvo_sJtVyyDc",
+            authDomain: "qrcodesystem-bceda.firebaseapp.com",
+            databaseURL: "https://qrcodesystem-bceda-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "qrcodesystem-bceda",
+            storageBucket: "qrcodesystem-bceda.firebasestorage.app",
+            messagingSenderId: "253231467455",
+            appId: "1:253231467455:web:5eb19df93b8b621ec6af0a"
+        };
+
+        // 初始化Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        // 全局變數
+        let currentDocId = null;
+        let scanner = null;
+        let qrCode = null;
+        
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化QR Code生成器
+            qrCode = new QRCodeStyling({
+                width: 250,
+                height: 250,
+                data: "",
+                image: "",
+                dotsOptions: {
+                    color: "#4267B2",
+                    type: "rounded"
+                },
+                backgroundOptions: {
+                    color: "#ffffff",
+                },
+                imageOptions: {
+                    crossOrigin: "anonymous",
+                    margin: 10
+                }
+            });
+            
+            // 檢查是否為管理員登入狀態
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    document.getElementById('login-form').style.display = 'none';
+                    document.getElementById('dashboard-content').style.display = 'block';
+                    loadRecords();
+                } else {
+                    document.getElementById('login-form').style.display = 'block';
+                    document.getElementById('dashboard-content').style.display = 'none';
+                }
+            });
+        });
+        
+        // 切換頁面部分
+        function showSection(sectionId) {
+            // 隱藏所有部分
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // 顯示選中的部分
+            document.getElementById(sectionId).classList.add('active');
+            
+            // 停止掃描器（如果正在運行）
+            if (scanner && sectionId !== 'updater-section') {
+                scanner.stop();
+                document.getElementById('scanner-video').srcObject = null;
+            }
+        }
+        
+        // 創建記錄
+        async function createRecord() {
+            const cabinNumber = document.getElementById('cabinNumber').value;
+            const guestName = document.getElementById('guestName').value;
+            const healthStatus = document.getElementById('healthStatus').value;
+            
+            if (!cabinNumber || !guestName) {
+                showMessage('creator-message', '請填寫車廂號碼和賓客姓名', 'error');
+                return;
+            }
+            
+            try {
+                const docRef = await db.collection('guests').add({
+                    cabinNumber,
+                    guestName,
+                    healthStatus,
+                    createdAt: new Date(),
+                    status: 'pending'
+                });
+                
+                showMessage('creator-message', '記錄建立成功！請列印QR碼', 'success');
+                
+                // 生成QR碼
+                generateQRCode(docRef.id);
+                currentDocId = docRef.id;
+                document.getElementById('qrcode-result').style.display = 'block';
+                
+                // 清空表單
+                document.getElementById('cabinNumber').value = '';
+                document.getElementById('guestName').value = '';
+            } catch (error) {
+                showMessage('creator-message', '建立記錄失敗: ' + error.message, 'error');
+            }
+        }
+        
+        // 生成QR碼
+        function generateQRCode(docId) {
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+            
+            const data = JSON.stringify({ 
+                docId: docId,
+                type: 'guestRecord'
+            });
+            
+            // 更新QR碼數據
+            qrCode.update({
+                data: data
+            });
+            
+            // 渲染QR碼
+            qrCode.append(qrcodeDiv);
+        }
+        
+        // 列印QR碼
+        function printQRCode() {
+            window.print();
+        }
+        
+        // 啟動掃描器
+        function startScanner() {
+            const videoElement = document.getElementById('scanner-video');
+            
+            scanner = new Instascan.Scanner({ 
+                video: videoElement,
+                mirror: false,
+                scanPeriod: 5,
+                continuous: true
+            });
+            
+            scanner.addListener('scan', function(content) {
+                try {
+                    const data = JSON.parse(content);
+                    if (data.type === 'guestRecord') {
+                        stopScanner();
+                        loadRecordForUpdate(data.docId);
+                    }
+                } catch (e) {
+                    showMessage('updater-message', '無效的QR碼', 'error');
+                }
+            });
+            
+            Instascan.Camera.getCameras().then(cameras => {
+                if (cameras.length > 0) {
+                    scanner.start(cameras[0]);
+                    showMessage('updater-message', '掃描器已啟動，請掃描QR碼', 'info');
+                } else {
+                    showMessage('updater-message', '找不到相機設備，請確認相機權限', 'error');
+                }
+            }).catch(error => {
+                showMessage('updater-message', '相機訪問錯誤: ' + error.message, 'error');
+            });
+        }
+        
+        // 停止掃描器
+        function stopScanner() {
+            if (scanner) {
+                scanner.stop();
+                showMessage('updater-message', '掃描器已停止', 'info');
+            }
+        }
+        
+        // 載入記錄以更新
+        async function loadRecordForUpdate(docId) {
+            try {
+                const doc = await db.collection('guests').doc(docId).get();
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    // 顯示記錄詳細信息
+                    document.getElementById('record-details').style.display = 'block';
+                    currentDocId = docId;
+                    
+                    showMessage('updater-message', '記錄載入成功，請填寫離場資訊', 'success');
+                    
+                    // 自動滾動到表單
+                    document.getElementById('record-details').scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                } else {
+                    showMessage('updater-message', '找不到記錄', 'error');
+                }
+            } catch (error) {
+                showMessage('updater-message', '載入記錄失敗: ' + error.message, 'error');
+            }
+        }
+        
+        // 更新記錄
+        async function updateRecord() {
+            const exitMethod = document.getElementById('exitMethod').value;
+            const transferDept = document.getElementById('transferDept').value;
+            const destination = document.getElementById('destination').value;
+            const exitTime = document.getElementById('exitTime').value;
+            
+            if (!exitMethod || !transferDept || !destination || !exitTime) {
+                showMessage('updater-message', '請填寫所有離場資訊', 'error');
+                return;
+            }
+            
+            try {
+                await db.collection('guests').doc(currentDocId).update({
+                    exitMethod,
+                    transferDept,
+                    destination,
+                    exitTime: new Date(exitTime),
+                    status: 'completed'
+                });
+                
+                showMessage('updater-message', '記錄更新成功！', 'success');
+                
+                // 清空表單
+                document.getElementById('exitMethod').value = '';
+                document.getElementById('transferDept').value = '';
+                document.getElementById('destination').value = '';
+                document.getElementById('exitTime').value = '';
+                
+                // 隱藏表單
+                setTimeout(() => {
+                    document.getElementById('record-details').style.display = 'none';
+                    startScanner();
+                }, 2000);
+            } catch (error) {
+                showMessage('updater-message', '更新記錄失敗: ' + error.message, 'error');
+            }
+        }
+        
+        // 管理員登入
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showMessage('login-message', '請填寫電子郵件和密碼', 'error');
+                return;
+            }
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showMessage('login-message', '登入成功！', 'success');
+            } catch (error) {
+                showMessage('login-message', '登入失敗: ' + error.message, 'error');
+            }
+        }
+        
+    // 管理員登入
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showMessage('login-message', '請填寫電子郵件和密碼', 'error');
+                return;
+            }
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showMessage('login-message', '登入成功！', 'success');
+            } catch (error) {
+                showMessage('login-message', '登入失敗: ' + error.message, 'error');
+            }
+        }
+        
+        // 登出系統
+        function logout() {
+            auth.signOut();
+        }
+        
+        // 載入記錄
+        async function loadRecords() {
+            try {
+                const snapshot = await db.collection('guests')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                const recordsList = document.getElementById('records-list');
+                recordsList.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const row = document.createElement('tr');
+                    
+                    const createdAt = data.createdAt ? data.createdAt.toDate().toLocaleString() : '未知';
+                    
+                    row.innerHTML = `
+                        <td>${data.cabinNumber || '-'}</td>
+                        <td>${data.guestName || '-'}</td>
+                        <td>${data.healthStatus || '-'}</td>
+                        <td>${data.exitMethod || '-'}</td>
+                        <td><span class="status-badge ${data.status === 'completed' ? 'status-complete' : 'status-pending'}">
+                            ${data.status === 'completed' ? '已完成' : '處理中'}
+                        </span></td>
+                        <td>${createdAt}</td>
+                    `;
+                    
+                    recordsList.appendChild(row);
+                });
+            } catch (error) {
+                console.error('載入記錄失敗:', error);
+            }
+        }
+        
+        // 顯示消息
+        function showMessage(elementId, message, type) {
+            const messageElement = document.getElementById(elementId);
+            messageElement.textContent = message;
+            messageElement.className = 'message';
+            
+            switch(type) {
+                case 'success':
+                    messageElement.classList.add('message-success');
+                    break;
+                case 'error':
+                    messageElement.classList.add('message-error');
+                    break;
+                case 'info':
+                    messageElement.classList.add('message-info');
+                    break;
+            }
+            
+            // 自動消失
+            if (type !== 'info') {
+                setTimeout(() => {
+                    messageElement.textContent = '';
+                    messageElement.className = 'message';
+                }, 5000);
+            }
+        }
+        
+        // 過濾記錄
+        function filterRecords() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#records-list tr');
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                let match = false;
+                
+                // 只檢查車廂號碼和賓客姓名
+                if (cells[0].textContent.toLowerCase().includes(input) || 
+                    cells[1].textContent.toLowerCase().includes(input)) {
+                    match = true;
+                }
+                
+                row.style.display = match ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

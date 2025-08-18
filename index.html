@@ -668,12 +668,12 @@
             <div class="info-card" onclick="showSection('creator-section')">
                 <i class="fas fa-ticket-alt"></i>
                 <h3>快速建立記錄</h3>
-                <p>只需輸入基本賓客資訊，系統即時生成專屬QR碼，方便後續追蹤與管理。</p>
+                <p>輸入基本賓客資訊，系統即時生成專屬QR碼，方便後續追蹤與管理。</p>
             </div>
             <div class="info-card" onclick="showSection('updater-section')">
                 <i class="fas fa-mobile-alt"></i>
                 <h3>掃碼更新資料</h3>
-                <p>使用行動裝置掃描QR碼，即可更新離場資訊，操作簡單直覺。</p>
+                <p>使用行動裝置掃描QR碼，更新離場資訊。</p>
             </div>
             <div class="info-card" onclick="showSection('dashboard-section')">
                 <i class="fas fa-chart-bar"></i>
@@ -698,13 +698,23 @@
                     <input type="text" id="guestName" placeholder="請輸入賓客全名">
                 </div>
                 
+            <div class="form-group">
+                <label for="gender"><i class="fas fa-venus-mars"></i> 性別</label>
+                <select id="gender" required>
+                    <option value="">請選擇性別</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+
                 <div class="form-group">
                     <label for="healthStatus"><i class="fas fa-heartbeat"></i> 健康狀況</label>
                     <select id="healthStatus">
                         <option value="正常">正常</option>
-                        <option value="暈眩">暈眩</option>
-                        <option value="心臟不適">心臟不適</option>
-                        <option value="外傷">外傷</option>
+                        <option value="綠色(第三優先)">綠色(第三優先)傷勢較輕可以自行走動</option>
+                        <option value="黃色(第二優先)">黃色(第二優先)傷勢較為嚴重需要緊急處理</option>
+                        <option value="紅色(第一優先)">紅色(第一優先)有生命危險需要立即進行搶救</option>
                         <option value="其他">其他</option>
                     </select>
                 </div>
@@ -715,16 +725,18 @@
             </div>
             
             <div id="qrcode-result" class="qrcode-container" style="display:none;">
-                <div class="print-only">
-                    <h3>賓客QR碼憑證</h3>
-                    <p>請掃描此QR碼更新離場資訊</p>
-                </div>
-                <div id="qrcode"></div>
-                <button class="btn btn-secondary" onclick="printQRCode()">
-                    <i class="fas fa-print"></i> 列印QR碼
-                </button>
-            </div>
-        </div>
+    <div class="print-only">
+        <h3>賓客QR碼憑證</h3>
+        <p>請掃描此QR碼更新離場資訊</p>
+    </div>
+    <!-- 只保留一個 qrcode div -->
+    <div style="display: flex; flex-direction: column; align-items: center; width: 100%;"></div>
+    <div id="qrcode" style="margin-bottom: 20px;"></div>
+    <button class="btn btn-secondary no-print" onclick="printQRCode()"style="margin-top: 20px;">
+        <i class="fas fa-print"></i> 列印QR碼
+    </button>
+</div>
+         </div>
         
         <!-- 第三方更新界面 -->
         <div id="updater-section" class="section">
@@ -766,7 +778,7 @@
                 
                 <div class="form-group">
                     <label for="destination"><i class="fas fa-map-marker-alt"></i> 目的地</label>
-                    <input type="text" id="destination" placeholder="例如: 市立醫院">
+                    <input type="text" id="destination" placeholder="例如: 北大嶼醫院">
                 </div>
                 
                 <div class="form-group">
@@ -802,9 +814,6 @@
                     <i class="fas fa-sign-in-alt"></i> 登入系統
                 </button>
                 
-                <button class="btn btn-block" onclick="resetPassword()" style="margin-top: 15px; background: var(--gray);">
-                    <i class="fas fa-key"></i> 忘記密碼
-                </button>
             </div>
             
             <div id="dashboard-content" style="display:none;">
@@ -841,24 +850,24 @@
                     </div>
                 </div>
                 
-                <div id="records-table">
-                    <table class="record-table">
-                        <thead>
-                            <tr>
-                                <th>車廂號碼</th>
-                                <th>賓客姓名</th>
-                                <th>健康狀況</th>
-                                <th>離場方式</th>
-                                <th>狀態</th>
-                                <th>建立時間</th>
-                            </tr>
-                        </thead>
-                        <tbody id="records-list">
-                            <!-- 記錄將動態載入 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                     <div id="records-table">
+            <table class="record-table">
+                <thead>
+                    <tr>
+                        <th>車廂號碼</th>
+                        <th>賓客姓名</th>
+                        <th>性別</th> <!-- 新增性別欄位 -->
+                        <th>健康狀況</th>
+                        <th>離場方式</th>
+                        <th>離場時間</th> <!-- 新增離場時間欄位 -->
+                        <th>狀態</th>
+                        <th>建立時間</th>
+                    </tr>
+                </thead>
+                <tbody id="records-list">
+                    <!-- 記錄將動態載入 -->
+                </tbody>
+            </table>
         </div>
     </div>
     
@@ -953,9 +962,25 @@
             }
         }
         
-        // 输入验证（仅验证姓名）
+        // 輸入驗證 (更新為驗證所有必填字段)
         function validateInputs() {
-            // 姓名验证（至少2个字符）
+            const requiredFields = [
+                {id: 'cabinNumber', name: '車廂號碼'},
+                {id: 'guestName', name: '賓客姓名'},
+                {id: 'gender', name: '性別'},
+                {id: 'healthStatus', name: '健康狀況'}
+            ];
+            
+            for (const field of requiredFields) {
+                const element = document.getElementById(field.id);
+                if (!element.value.trim()) {
+                    showMessage('creator-message', `請填寫${field.name}`, 'error');
+                    element.focus();
+                    return false;
+                }
+            }
+            
+            // 姓名驗證（至少2個字符）
             if (document.getElementById('guestName').value.length < 2) {
                 showMessage('creator-message', '姓名至少需要2個字符', 'error');
                 return false;
@@ -964,12 +989,13 @@
             return true;
         }
         
-        // 創建記錄
+        // 創建記錄 (更新為包含性別)
         async function createRecord() {
             if (!validateInputs()) return;
             
             const cabinNumber = document.getElementById('cabinNumber').value;
             const guestName = document.getElementById('guestName').value;
+            const gender = document.getElementById('gender').value;
             const healthStatus = document.getElementById('healthStatus').value;
             
             try {
@@ -977,6 +1003,7 @@
                 const docRef = await db.collection('guests').add({
                     cabinNumber,
                     guestName,
+                    gender, // 新增性別字段
                     healthStatus,
                     createdAt: new Date(),
                     status: 'pending'
@@ -989,22 +1016,21 @@
                 currentDocId = docRef.id;
                 document.getElementById('qrcode-result').style.display = 'block';
                 
-                // 自动滚动到QR码区域
+                // 自動滾動到QR碼區域
                 setTimeout(() => {
                     document.getElementById('qrcode-result').scrollIntoView({
                         behavior: 'smooth'
                     });
                 }, 500);
                 
-                // 3秒后自动跳转到扫描页面
-                setTimeout(() => {
-                    showSection('updater-section');
-                    startScanner();
-                }, 3000);
+                // 移除自動跳轉到掃描頁面的代碼
+                // 保持停留在當前頁面以便用戶可以打印QR碼
                 
                 // 清空表單
                 document.getElementById('cabinNumber').value = '';
                 document.getElementById('guestName').value = '';
+                document.getElementById('gender').value = '';
+                document.getElementById('healthStatus').value = '';
             } catch (error) {
                 showMessage('creator-message', '建立記錄失敗: ' + error.message, 'error');
             } finally {
@@ -1030,67 +1056,87 @@
    function printQRCode() {
     // 1. 保存當前頁面狀態
     const originalTitle = document.title;
+    const originalBodyHTML = document.body.innerHTML;
     const originalBodyStyle = document.body.style.cssText;
     
-    // 2. 將QR code轉換為圖片
+    // 2. 獲取QR碼圖像
     const qrcodeCanvas = document.getElementById('qrcode').querySelector('canvas');
-    const qrcodeImage = new Image();
-    qrcodeImage.src = qrcodeCanvas.toDataURL('image/png');
-    qrcodeImage.style.width = '60mm';
-    qrcodeImage.style.height = '60mm';
-    qrcodeImage.style.display = 'block';
-    qrcodeImage.style.margin = '0 auto';
-
-    // 3. 設置打印專用頁面
-    document.title = "QR碼憑證";
-    document.body.style.cssText = `
-        margin: 0 !important;
-        padding: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        height: 100vh !important;
-        background: white !important;
+    if (!qrcodeCanvas) {
+        alert('無法找到QR碼，請先生成QR碼');
+        return;
+    }
+    
+    // 3. 創建打印專用內容
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>QR碼憑證</title>
+            <style>
+                @page {
+                    size: auto;
+                    margin: 0;
+                }
+                body {
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    font-family: Arial, sans-serif;
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                .print-header h3 {
+                    font-size: 24px;
+                    margin-bottom: 10px;
+                    color: #333;
+                }
+                .print-header p {
+                    font-size: 16px;
+                    color: #666;
+                }
+                .qrcode-container {
+                    margin: 0 auto;
+                    text-align: center;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <h3>賓客QR碼憑證</h3>
+                <p>請掃描此QR碼更新離場資訊</p>
+            </div>
+            <div class="qrcode-container">
+                <img src="${qrcodeCanvas.toDataURL('image/png')}" 
+                     style="width: 60mm; height: 60mm;">
+            </div>
+        </body>
+        </html>
     `;
     
-    document.body.innerHTML = `
-        <div style="text-align: center; margin-bottom: 10mm;">
-            <h3 style="font-size: 24pt; margin-bottom: 5mm;">賓客QR碼憑證</h3>
-            <p style="font-size: 12pt;">請掃描此QR碼更新離場資訊</p>
-        </div>
-    `;
-    document.body.appendChild(qrcodeImage);
-
-    // 4. 創建打印樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-        @page {
-            size: auto !important;
-            margin: 0 !important;
-        }
-    `;
-    document.head.appendChild(style);
-
-    // 5. 使用setTimeout確保樣式生效
-    setTimeout(() => {
-        // 6. 打印完成後恢復原始頁面
-        const restorePage = () => {
+    // 4. 創建打印窗口
+    const printWindow = window.open('', '_blank');
+    printWindow.document.open();
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // 5. 確保內容加載完成後打印
+    printWindow.onload = function() {
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+            
+            // 恢復原始頁面
             document.title = originalTitle;
+            document.body.innerHTML = originalBodyHTML;
             document.body.style.cssText = originalBodyStyle;
-            document.head.removeChild(style);
-            
-            // 重新加載原始內容
-            location.reload();
-            
-            window.removeEventListener('afterprint', restorePage);
-        };
-        
-        window.addEventListener('afterprint', restorePage);
-        
-        // 7. 觸發打印
-        window.print();
-    }, 500);
+        }, 500);
+    };
 }
         
         // 啟動掃描器
@@ -1342,13 +1388,16 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const createdAt = data.createdAt ? data.createdAt.toDate().toLocaleString() : '未知';
+                    const exitTime = data.exitTime ? data.exitTime.toDate().toLocaleString() : '-';
                     
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${data.cabinNumber || '-'}</td>
                         <td>${data.guestName || '-'}</td>
+                        <td>${data.gender || '-'}</td> <!-- 新增性別顯示 -->
                         <td>${data.healthStatus || '-'}</td>
                         <td>${data.exitMethod || '-'}</td>
+                        <td>${exitTime}</td> <!-- 新增離場時間顯示 -->
                         <td><span class="status-badge ${data.status === 'completed' ? 'status-complete' : 'status-pending'}">
                             ${data.status === 'completed' ? '已完成' : '處理中'}
                         </span></td>
@@ -1357,13 +1406,13 @@
                     
                     recordsList.appendChild(row);
                     
-                    // 统计计数
+                    // 統計計數
                     total++;
                     if (data.status === 'completed') completed++;
                     else pending++;
                 });
                 
-                // 更新统计数字
+                // 更新統計數字
                 document.getElementById('totalRecords').textContent = total;
                 document.getElementById('completedRecords').textContent = completed;
                 document.getElementById('pendingRecords').textContent = pending;

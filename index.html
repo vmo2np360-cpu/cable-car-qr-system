@@ -612,33 +612,52 @@
         
         /* 打印样式 */
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            .qrcode-container, .qrcode-container * {
-                visibility: visible;
-            }
-            .qrcode-container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                border: none !important;
-                box-shadow: none !important;
-                display: flex !important;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                background: white !important;
-            }
-            #qrcode {
-                margin: 0 auto !important;
-            }
-            button {
-                display: none !important;
-            }
-        }
+    body * {
+        visibility: hidden;
+    }
+    .qrcode-container, .qrcode-container * {
+        visibility: visible;
+    }
+    .qrcode-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: white !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    #qrcode {
+        width: 80vw !important;
+        height: 80vw !important;
+        max-width: 300px;
+        max-height: 300px;
+    }
+    .print-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    button {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .qrcode-container {
+        padding: 10px;
+    }
+    #qrcode {
+        width: 90vw !important;
+        height: 90vw !important;
+        max-width: 250px;
+        max-height: 250px;
+    }
+}
     </style>
 </head>
 <body>
@@ -724,15 +743,17 @@
                 </button>
             </div>
             
-            <div id="qrcode-result" class="qrcode-container" style="display:none;">
+           <div id="qrcode-result" class="qrcode-container" style="display:none;">
     <div class="print-only">
         <h3>賓客QR碼憑證</h3>
         <p>請掃描此QR碼更新離場資訊</p>
     </div>
-    <!-- 只保留一個 qrcode div -->
-    <div style="display: flex; flex-direction: column; align-items: center; width: 100%;"></div>
-    <div id="qrcode" style="margin-bottom: 20px;"></div>
-    <button class="btn btn-secondary no-print" onclick="printQRCode()"style="margin-top: 20px;">
+    <div id="qrcode"></div>
+    <div class="print-info print-only">
+        <p><strong>車廂號碼:</strong> <span id="print-cabinNumber"></span></p>
+        <p><strong>賓客姓名:</strong> <span id="print-guestName"></span></p>
+    </div>
+    <button class="btn btn-secondary no-print" onclick="printQRCode()">
         <i class="fas fa-print"></i> 列印QR碼
     </button>
 </div>
@@ -1054,46 +1075,39 @@
         
         // 列印QR碼（仅打印QR码）
    function printQRCode() {
-    // 1. 保存當前頁面狀態
-    const originalTitle = document.title;
-    const originalBodyHTML = document.body.innerHTML;
-    const originalBodyStyle = document.body.style.cssText;
-    
-    // 2. 獲取QR碼圖像
+    // 獲取QR碼圖像
     const qrcodeCanvas = document.getElementById('qrcode').querySelector('canvas');
     if (!qrcodeCanvas) {
         alert('無法找到QR碼，請先生成QR碼');
         return;
     }
     
-    // 3. 創建打印專用內容
+    // 創建打印窗口
+    const printWindow = window.open('', '_blank');
+    
+    // 創建打印內容
     const printContent = `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>QR碼憑證</title>
+            <title>賓客QR碼憑證</title>
             <style>
                 @page {
                     size: auto;
-                    margin: 0;
+                    margin: 10mm;
                 }
                 body {
                     margin: 0;
-                    padding: 0;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
+                    padding: 20px;
                     font-family: Arial, sans-serif;
+                    text-align: center;
                 }
                 .print-header {
-                    text-align: center;
                     margin-bottom: 20px;
                 }
                 .print-header h3 {
                     font-size: 24px;
-                    margin-bottom: 10px;
+                    margin-bottom: 5px;
                     color: #333;
                 }
                 .print-header p {
@@ -1101,8 +1115,20 @@
                     color: #666;
                 }
                 .qrcode-container {
-                    margin: 0 auto;
-                    text-align: center;
+                    margin: 20px auto;
+                    padding: 10px;
+                    border: 1px solid #eee;
+                    display: inline-block;
+                }
+                .info-section {
+                    margin-top: 20px;
+                    text-align: left;
+                    font-size: 14px;
+                }
+                @media print {
+                    .no-print {
+                        display: none !important;
+                    }
                 }
             </style>
         </head>
@@ -1115,26 +1141,28 @@
                 <img src="${qrcodeCanvas.toDataURL('image/png')}" 
                      style="width: 60mm; height: 60mm;">
             </div>
+            <div class="info-section">
+                <p><strong>注意事項：</strong></p>
+                <ul>
+                    <li>請將此QR碼貼在顯眼位置</li>
+                    <li>確保QR碼清晰可掃描</li>
+                    <li>如有問題，請聯繫工作人員</li>
+                </ul>
+            </div>
         </body>
         </html>
     `;
     
-    // 4. 創建打印窗口
-    const printWindow = window.open('', '_blank');
+    // 寫入打印窗口
     printWindow.document.open();
     printWindow.document.write(printContent);
     printWindow.document.close();
     
-    // 5. 確保內容加載完成後打印
+    // 確保內容加載完成後打印
     printWindow.onload = function() {
         setTimeout(() => {
             printWindow.print();
-            printWindow.close();
-            
-            // 恢復原始頁面
-            document.title = originalTitle;
-            document.body.innerHTML = originalBodyHTML;
-            document.body.style.cssText = originalBodyStyle;
+            // 不立即關閉窗口，讓用戶有機會檢查
         }, 500);
     };
 }

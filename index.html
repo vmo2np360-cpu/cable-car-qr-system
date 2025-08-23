@@ -100,6 +100,7 @@
         
         .nav-btn i {
             font-size: 1.2rem;
+            font-weight: 500;
         }
         
         .nav-btn:hover, .nav-btn.active {
@@ -484,6 +485,50 @@
             color: var(--gray);
         }
         
+        .filter-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            min-width: 180px;
+        }
+        
+        .filter-item label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .health-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .health-stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        .health-stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .health-stat-card.green { border-left: 5px solid #34A853; }
+        .health-stat-card.yellow { border-left: 5px solid #FBBC05; }
+        .health-stat-card.red { border-left: 5px solid #EA4335; }
+        .health-stat-card.black { border-left: 5px solid #5f6368; }
+        
         /* 移动端适配 */
         @media (max-width: 768px) {
             .header-content {
@@ -532,11 +577,6 @@
                 padding: 8px;
             }
             
-            .record-table th:nth-child(4),
-            .record-table td:nth-child(4) {
-                display: none;
-            }
-            
             .system-info {
                 grid-template-columns: 1fr;
             }
@@ -557,6 +597,14 @@
             .scanner-overlay {
                 width: 90%;
                 max-width: none;
+            }
+            
+            .filter-container {
+                flex-direction: column;
+            }
+            
+            .filter-item {
+                width: 100%;
             }
         }
         
@@ -711,30 +759,75 @@
                     <label for="cabinNumber"><i class="fas fa-train"></i> 車廂號碼</label>
                     <input type="text" id="cabinNumber" placeholder="例如: C-102 或 任意格式">
                 </div>
+            
+             <div class="form-group">
+                    <label for="groupNumber"><i class="fas fa-users"></i> 組別</label>
+                    <select id="groupNumber">
+                        <option value="">請選擇組別</option>
+                        <option value="1">第1組</option>
+                        <option value="2">第2組</option>
+                        <option value="3">第3組</option>
+                        <option value="4">第4組</option>
+                        <option value="5">第5組</option>
+                        <option value="6">第6組</option>
+                        <option value="7">第7組</option>
+                        <option value="8">第8組</option>
+                        <option value="9">第9組</option>
+                        <option value="10">第10組</option>
+                        <option value="11">第11組</option>
+                        <option value="12">第12組</option>
+                        <option value="13">第13組</option>
+                        <option value="14">第14組</option>
+                        <option value="15">第15組</option>
+                        <option value="16">第16組</option>
+                        <option value="17">第17組</option>
+                    </select>
+                </div>
                 
                 <div class="form-group">
                     <label for="guestName"><i class="fas fa-user"></i> 賓客姓名</label>
                     <input type="text" id="guestName" placeholder="請輸入賓客全名">
+                    <div style="margin-top: 8px;">
+                        <button type="button" class="btn" style="padding: 8px 12px; font-size: 14px;" 
+                                onclick="document.getElementById('guestName').value = '不便透露'">
+                            <i class="fas fa-eye-slash"></i> 設為「不便透露」
+                        </button>
+                    </div>
                 </div>
                 
-            <div class="form-group">
-                <label for="gender"><i class="fas fa-venus-mars"></i> 性別</label>
-                <select id="gender" required>
-                    <option value="">請選擇性別</option>
-                    <option value="男">男</option>
-                    <option value="女">女</option>
-                    <option value="其他">其他</option>
-                </select>
-            </div>
-
+                <div class="form-group">
+                    <label for="gender"><i class="fas fa-venus-mars"></i> 性別</label>
+                    <select id="gender" required>
+                        <option value="">請選擇性別</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ageRange"><i class="fas fa-birthday-cake"></i> 年齡間距</label>
+                    <select id="ageRange">
+                        <option value="">請選擇年齡間距</option>
+                         <option value="">不便透露</option>
+                        <option value="0-12">0-12歲</option>
+                        <option value="13-17">13-17歲</option>
+                        <option value="18-25">18-25歲</option>
+                        <option value="26-35">26-35歲</option>
+                        <option value="36-45">36-45歲</option>
+                        <option value="46-55">46-55歲</option>
+                        <option value="56-65">56-65歲</option>
+                        <option value="66+">66歲以上</option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label for="healthStatus"><i class="fas fa-heartbeat"></i> 健康狀況</label>
                     <select id="healthStatus">
-                        <option value="正常">正常</option>
-                        <option value="綠色(第三優先)">綠色(第三優先)傷勢較輕可以自行走動</option>
+                        <option value="綠色(第三優先)">綠色(第三優先)正常或傷勢較輕可以自行走動</option>
                         <option value="黃色(第二優先)">黃色(第二優先)傷勢較為嚴重需要緊急處理</option>
                         <option value="紅色(第一優先)">紅色(第一優先)有生命危險需要立即進行搶救</option>
-                        <option value="其他">其他</option>
+                        <option value="黑色(死亡/存活無望)">黑色(死亡/存活無望)</option>
                     </select>
                 </div>
                 
@@ -782,24 +875,30 @@
             
             <div id="record-details" class="card" style="display:none;">
                 <h3><i class="fas fa-user-circle"></i> 賓客資訊</h3>
+                
                 <div class="form-group">
-                    <label for="exitMethod"><i class="fas fa-walking"></i> 離場方式</label>
+                    <label><i class="fas fa-train"></i> 車廂號碼</label>
+                    <p id="detail-cabinNumber" style="padding: 10px; background: #f5f5f5; border-radius: 8px;"></p>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> 組別</label>
+                    <p id="detail-groupNumber" style="padding: 10px; background: #f5f5f5; border-radius: 8px;"></p>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-heartbeat"></i> 健康狀況</label>
+                    <p id="detail-healthStatus" style="padding: 10px; background: #f5f5f5; border-radius: 8px;"></p>
+                </div>
+                
+               <div class="form-group">
+                    <label for="exitMethod"><i class="fas fa-walking"></i> 後續處理</label>
                     <select id="exitMethod">
-                        <option value="步行">步行</option>
-                        <option value="輪椅">輪椅</option>
-                        <option value="救護車">救護車</option>
-                        <option value="私家車">私家車</option>
+                        <option value="正常或傷勢已處理 已離開">正常或傷勢已處理 自行離開</option>
+                        <option value="需要在賓客休息區休息">需要在賓客休息區休息</option>
+                        <option value="已轉交政府部門跟進">已轉交政府部門跟進</option>
+                        <option value="其他">其他</option>
                     </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="transferDept"><i class="fas fa-hospital"></i> 轉送部門</label>
-                    <input type="text" id="transferDept" placeholder="例如: 急診室">
-                </div>
-                
-                <div class="form-group">
-                    <label for="destination"><i class="fas fa-map-marker-alt"></i> 目的地</label>
-                    <input type="text" id="destination" placeholder="例如: 北大嶼醫院">
                 </div>
                 
                 <div class="form-group">
@@ -853,6 +952,77 @@
                     </div>
                 </div>
                 
+                <!-- 健康狀況統計 -->
+                <h3><i class="fas fa-heartbeat"></i> 健康狀況統計</h3>
+                <div class="health-stats" id="health-stats">
+                    <div class="health-stat-card green">
+                        <div class="number" id="green-count">0</div>
+                        <div class="label">綠色(第三優先)</div>
+                    </div>
+                    <div class="health-stat-card yellow">
+                        <div class="number" id="yellow-count">0</div>
+                        <div class="label">黃色(第二優先)</div>
+                    </div>
+                    <div class="health-stat-card red">
+                        <div class="number" id="red-count">0</div>
+                        <div class="label">紅色(第一優先)</div>
+                    </div>
+                    <div class="health-stat-card black">
+                        <div class="number" id="black-count">0</div>
+                        <div class="label">黑色(死亡/存活無望)</div>
+                    </div>
+                </div>
+                
+                <!-- 篩選功能 -->
+                <h3><i class="fas fa-filter"></i> 數據篩選</h3>
+                <div class="filter-container">
+                    <div class="filter-item">
+                        <label for="filter-exitMethod">後續處理</label>
+                        <select id="filter-exitMethod" onchange="filterRecords()">
+                        <option value="">所有狀態</option>
+                        <option value="正常或傷勢已處理 已離開">正常或傷勢已處理 自行離開</option>
+                        <option value="需要在賓客休息區休息">需要在賓客休息區休息</option>
+                        <option value="已轉交政府部門跟進">已轉交政府部門跟進</option>
+                        <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="filter-health">健康狀況</label>
+                        <select id="filter-health" onchange="filterRecords()">
+                            <option value="">所有狀態</option>
+                            <option value="綠色(第三優先)">綠色(第三優先)</option>
+                            <option value="黃色(第二優先)">黃色(第二優先)</option>
+                            <option value="紅色(第一優先)">紅色(第一優先)</option>
+                            <option value="黑色(死亡/存活無望)">黑色(死亡/存活無望)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="filter-status">記錄狀態</label>
+                        <select id="filter-status" onchange="filterRecords()">
+                            <option value="">所有狀態</option>
+                            <option value="completed">已完成</option>
+                            <option value="pending">處理中</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="filter-age">年齡間距</label>
+                        <select id="filter-age" onchange="filterRecords()">
+                            <option value="">所有年齡</option>
+                            <option value="0-12">0-12歲</option>
+                            <option value="13-17">13-17歲</option>
+                            <option value="18-25">18-25歲</option>
+                            <option value="26-35">26-35歲</option>
+                            <option value="36-45">36-45歲</option>
+                            <option value="46-55">46-55歲</option>
+                            <option value="56-65">56-65歲</option>
+                            <option value="66+">66歲以上</option>
+                        </select>
+                    </div>
+                </div>
+                
                 <div class="stats-container">
                     <div class="stat-card">
                         <i class="fas fa-users"></i>
@@ -877,10 +1047,12 @@
                     <tr>
                         <th>車廂號碼</th>
                         <th>賓客姓名</th>
-                        <th>性別</th> <!-- 新增性別欄位 -->
+                        <th>性別</th>
+                        <th>年齡間距</th>
+                        <th>組別</th>
                         <th>健康狀況</th>
-                        <th>離場方式</th>
-                        <th>離場時間</th> <!-- 新增離場時間欄位 -->
+                        <th>後續處理</th>
+                        <th>離場時間</th>
                         <th>狀態</th>
                         <th>建立時間</th>
                     </tr>
@@ -893,7 +1065,7 @@
     </div>
     
     <footer>
-        <p>纜車賓客QR碼管理系統 &copy; 2025 - 安全、高效、便捷的賓客管理解決方案</p>
+        <p>纜車賓客QR碼管理系統 &copy; 2025 </p>
     </footer>
 
     <script>
@@ -919,6 +1091,7 @@
         let scanner = null;
         let qrCode = null;
         let scanning = false;
+        let allRecords = []; // 存储所有记录用于筛选
         
         // 頁面載入時初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -1010,13 +1183,15 @@
             return true;
         }
         
-        // 創建記錄 (更新為包含性別)
+        // 創建記錄 (更新為包含性別、年齡間距和組別)
         async function createRecord() {
             if (!validateInputs()) return;
             
             const cabinNumber = document.getElementById('cabinNumber').value;
             const guestName = document.getElementById('guestName').value;
             const gender = document.getElementById('gender').value;
+            const ageRange = document.getElementById('ageRange').value;
+            const groupNumber = document.getElementById('groupNumber').value;
             const healthStatus = document.getElementById('healthStatus').value;
             
             try {
@@ -1024,7 +1199,9 @@
                 const docRef = await db.collection('guests').add({
                     cabinNumber,
                     guestName,
-                    gender, // 新增性別字段
+                    gender,
+                    ageRange,
+                    groupNumber,
                     healthStatus,
                     createdAt: new Date(),
                     status: 'pending'
@@ -1051,6 +1228,8 @@
                 document.getElementById('cabinNumber').value = '';
                 document.getElementById('guestName').value = '';
                 document.getElementById('gender').value = '';
+                document.getElementById('ageRange').value = '';
+                document.getElementById('groupNumber').value = '';
                 document.getElementById('healthStatus').value = '';
             } catch (error) {
                 showMessage('creator-message', '建立記錄失敗: ' + error.message, 'error');
@@ -1269,6 +1448,11 @@
                     document.getElementById('record-details').style.display = 'block';
                     currentDocId = docId;
                     
+                    // 顯示車廂號碼、組別和健康狀況
+                    document.getElementById('detail-cabinNumber').textContent = data.cabinNumber || '-';
+                    document.getElementById('detail-groupNumber').textContent = data.groupNumber ? `第${data.groupNumber}組` : '-';
+                    document.getElementById('detail-healthStatus').textContent = data.healthStatus || '-';
+                    
                     // 預設離場時間為現在
                     const now = new Date();
                     document.getElementById('exitTime').value = 
@@ -1290,14 +1474,12 @@
             }
         }
         
-        // 更新記錄
+        // 更新記錄 (移除了轉送部門和目的地)
         async function updateRecord() {
             const exitMethod = document.getElementById('exitMethod').value;
-            const transferDept = document.getElementById('transferDept').value;
-            const destination = document.getElementById('destination').value;
             const exitTime = document.getElementById('exitTime').value;
             
-            if (!exitMethod || !transferDept || !destination || !exitTime) {
+            if (!exitMethod || !exitTime) {
                 showMessage('updater-message', '請填寫所有離場資訊', 'error');
                 return;
             }
@@ -1306,8 +1488,6 @@
                 showLoader();
                 await db.collection('guests').doc(currentDocId).update({
                     exitMethod,
-                    transferDept,
-                    destination,
                     exitTime: new Date(exitTime),
                     status: 'completed',
                     updatedAt: new Date()
@@ -1317,8 +1497,6 @@
                 
                 // 清空表單
                 document.getElementById('exitMethod').value = '';
-                document.getElementById('transferDept').value = '';
-                document.getElementById('destination').value = '';
                 document.getElementById('exitTime').value = '';
                 
                 // 2秒後重新啟動掃描器
@@ -1412,20 +1590,34 @@
                 recordsList.innerHTML = '';
                 
                 let total = 0, completed = 0, pending = 0;
+                let greenCount = 0, yellowCount = 0, redCount = 0, blackCount = 0;
+                
+                allRecords = []; // 重置所有记录
                 
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    const id = doc.id;
                     const createdAt = data.createdAt ? data.createdAt.toDate().toLocaleString() : '未知';
                     const exitTime = data.exitTime ? data.exitTime.toDate().toLocaleString() : '-';
+                    
+                    // 添加记录到所有记录数组
+                    allRecords.push({
+                        id,
+                        ...data,
+                        createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+                        exitTime: data.exitTime ? data.exitTime.toDate() : null
+                    });
                     
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${data.cabinNumber || '-'}</td>
                         <td>${data.guestName || '-'}</td>
-                        <td>${data.gender || '-'}</td> <!-- 新增性別顯示 -->
+                        <td>${data.gender || '-'}</td>
+                        <td>${data.ageRange || '-'}</td>
+                        <td>${data.groupNumber ? '第' + data.groupNumber + '組' : '-'}</td>
                         <td>${data.healthStatus || '-'}</td>
                         <td>${data.exitMethod || '-'}</td>
-                        <td>${exitTime}</td> <!-- 新增離場時間顯示 -->
+                        <td>${exitTime}</td>
                         <td><span class="status-badge ${data.status === 'completed' ? 'status-complete' : 'status-pending'}">
                             ${data.status === 'completed' ? '已完成' : '處理中'}
                         </span></td>
@@ -1438,12 +1630,26 @@
                     total++;
                     if (data.status === 'completed') completed++;
                     else pending++;
+                    
+                    // 健康狀況統計
+                    if (data.healthStatus) {
+                        if (data.healthStatus.includes('綠色')) greenCount++;
+                        else if (data.healthStatus.includes('黃色')) yellowCount++;
+                        else if (data.healthStatus.includes('紅色')) redCount++;
+                        else if (data.healthStatus.includes('黑色')) blackCount++;
+                    }
                 });
                 
                 // 更新統計數字
                 document.getElementById('totalRecords').textContent = total;
                 document.getElementById('completedRecords').textContent = completed;
                 document.getElementById('pendingRecords').textContent = pending;
+                
+                // 更新健康狀況統計
+                document.getElementById('green-count').textContent = greenCount;
+                document.getElementById('yellow-count').textContent = yellowCount;
+                document.getElementById('red-count').textContent = redCount;
+                document.getElementById('black-count').textContent = blackCount;
                 
             } catch (error) {
                 console.error('載入記錄失敗:', error);
@@ -1455,20 +1661,68 @@
         
         // 過濾記錄
         function filterRecords() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const exitMethodFilter = document.getElementById('filter-exitMethod').value;
+            const healthFilter = document.getElementById('filter-health').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            const ageFilter = document.getElementById('filter-age').value;
+            
             const rows = document.querySelectorAll('#records-list tr');
+            let visibleCount = 0;
             
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                let match = false;
+                let match = true;
                 
-                if (cells[0].textContent.toLowerCase().includes(input) || 
-                    cells[1].textContent.toLowerCase().includes(input)) {
-                    match = true;
+                // 搜尋框過濾
+                if (searchInput) {
+                    const cabinNumber = cells[0].textContent.toLowerCase();
+                    const guestName = cells[1].textContent.toLowerCase();
+                    if (!cabinNumber.includes(searchInput) && !guestName.includes(searchInput)) {
+                        match = false;
+                    }
+                }
+                
+                // 離場方式過濾
+                if (match && exitMethodFilter) {
+                    const exitMethod = cells[6].textContent;
+                    if (exitMethod !== exitMethodFilter) {
+                        match = false;
+                    }
+                }
+                
+                // 健康狀況過濾
+                if (match && healthFilter) {
+                    const healthStatus = cells[5].textContent;
+                    if (healthStatus !== healthFilter) {
+                        match = false;
+                    }
+                }
+                
+                // 狀態過濾
+                if (match && statusFilter) {
+                    const statusBadge = cells[8].querySelector('.status-badge');
+                    const status = statusBadge.textContent.trim();
+                    if ((statusFilter === 'completed' && status !== '已完成') || 
+                        (statusFilter === 'pending' && status !== '處理中')) {
+                        match = false;
+                    }
+                }
+                
+                // 年齡間距過濾
+                if (match && ageFilter) {
+                    const ageRange = cells[3].textContent;
+                    if (ageRange !== ageFilter) {
+                        match = false;
+                    }
                 }
                 
                 row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
             });
+            
+            // 更新統計數字以反映篩選結果
+            document.getElementById('totalRecords').textContent = visibleCount;
         }
         
         // 顯示消息

@@ -681,14 +681,18 @@
         box-shadow: none !important;
     }
     #qrcode {
-        width: 80vw !important;
-        height: 80vw !important;
-        max-width: 300px;
-        max-height: 300px;
+        width: 2cm !important;
+        height: 2cm !important;
+        margin: 0 auto;
     }
     .print-header {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
+    }
+    .print-info {
+        text-align: center;
+        margin-top: 10px;
+        font-size: 12px;
     }
     button {
         display: none !important;
@@ -836,7 +840,7 @@
                 </button>
             </div>
             
-           <div id="qrcode-result" class="qrcode-container" style="display:none;">
+          <div id="qrcode-result" class="qrcode-container" style="display:none;">
     <div class="print-only">
         <h3>賓客QR碼憑證</h3>
         <p>請掃描此QR碼更新離場資訊</p>
@@ -844,7 +848,8 @@
     <div id="qrcode"></div>
     <div class="print-info print-only">
         <p><strong>車廂號碼:</strong> <span id="print-cabinNumber"></span></p>
-        <p><strong>賓客姓名:</strong> <span id="print-guestName"></span></p>
+        <p><strong>組別:</strong> <span id="print-groupNumber"></span></p>
+        <!-- 移除了宾客姓名显示 -->
     </div>
     <button class="btn btn-secondary no-print" onclick="printQRCode()">
         <i class="fas fa-print"></i> 列印QR碼
@@ -896,7 +901,7 @@
                     <select id="exitMethod">
                         <option value="正常或傷勢已處理 已離開">正常或傷勢已處理 自行離開</option>
                         <option value="需要在賓客休息區休息">需要在賓客休息區休息</option>
-                        <option value="已轉交政府部門跟進">已轉交政府部門跟進</option>
+                        <option value="已送院救治">已送院救治</option>
                         <option value="其他">其他</option>
                     </select>
                 </div>
@@ -982,7 +987,7 @@
                         <option value="">所有狀態</option>
                         <option value="正常或傷勢已處理 已離開">正常或傷勢已處理 自行離開</option>
                         <option value="需要在賓客休息區休息">需要在賓客休息區休息</option>
-                        <option value="已轉交政府部門跟進">已轉交政府部門跟進</option>
+                        <option value="已送院救治">已送院救治</option>
                         <option value="其他">其他</option>
                         </select>
                     </div>
@@ -1092,6 +1097,7 @@
         let qrCode = null;
         let scanning = false;
         let allRecords = []; // 存储所有记录用于筛选
+        let dashboardRefreshInterval = null; // 用于存储自动刷新间隔
         
         // 頁面載入時初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -1125,6 +1131,8 @@
                     document.getElementById('login-form').style.display = 'none';
                     document.getElementById('dashboard-content').style.display = 'block';
                     loadRecords();
+                    // 启动监控页面的自动刷新
+                    startDashboardAutoRefresh();
                 } else if (user) {
                     auth.signOut(); // 非管理员用户自动登出
                 }
@@ -1153,6 +1161,35 @@
                 setTimeout(startScanner, 500);
             } else if (scanner) {
                 stopScanner();
+            }
+            
+            // 如果是监控页面，启动自动刷新；否则停止
+            if (sectionId === 'dashboard-section') {
+                startDashboardAutoRefresh();
+            } else {
+                stopDashboardAutoRefresh();
+            }
+        }
+        
+        // 启动监控页面的自动刷新
+        function startDashboardAutoRefresh() {
+            // 清除现有的刷新间隔
+            stopDashboardAutoRefresh();
+            
+            // 设置新的刷新间隔（每分钟一次）
+            dashboardRefreshInterval = setInterval(() => {
+                if (document.getElementById('dashboard-section').classList.contains('active')) {
+                    loadRecords();
+                    console.log('监控页面自动刷新');
+                }
+            }, 60000); // 60000毫秒 = 1分钟
+        }
+        
+        // 停止监控页面的自动刷新
+        function stopDashboardAutoRefresh() {
+            if (dashboardRefreshInterval) {
+                clearInterval(dashboardRefreshInterval);
+                dashboardRefreshInterval = null;
             }
         }
         
@@ -1183,6 +1220,15 @@
             return true;
         }
         
+        // 根據健康狀況獲取QR碼顏色
+        function getQRCodeColor(healthStatus) {
+            if (healthStatus.includes('綠色')) return '#34A853'; // 綠色
+            if (healthStatus.includes('黃色')) return '#FBBC05'; // 黃色
+            if (healthStatus.includes('紅色')) return '#EA4335'; // 紅色
+            if (healthStatus.includes('黑色')) return '#5f6368'; // 黑色
+            return '#4267B2'; // 默認顏色
+        }
+        
         // 創建記錄 (更新為包含性別、年齡間距和組別)
         async function createRecord() {
             if (!validateInputs()) return;
@@ -1210,9 +1256,14 @@
                 showMessage('creator-message', '記錄建立成功！請列印QR碼', 'success');
                 
                 // 生成QR碼
-                generateQRCode(docRef.id);
+                generateQRCode(docRef.id, healthStatus);
                 currentDocId = docRef.id;
                 document.getElementById('qrcode-result').style.display = 'block';
+                
+                // 更新打印信息
+                document.getElementById('print-cabinNumber').textContent = cabinNumber;
+                document.getElementById('print-groupNumber').textContent = groupNumber ? `第${groupNumber}組` : '-';
+                document.getElementById('print-guestName').textContent = guestName;
                 
                 // 自動滾動到QR碼區域
                 setTimeout(() => {
@@ -1238,8 +1289,8 @@
             }
         }
         
-        // 生成QR碼
-        function generateQRCode(docId) {
+        // 生成QR碼（更新為根據健康狀況更改顏色）
+        function generateQRCode(docId, healthStatus) {
             const qrcodeDiv = document.getElementById('qrcode');
             qrcodeDiv.innerHTML = '';
             
@@ -1248,12 +1299,21 @@
                 type: 'guestRecord'
             });
             
-            qrCode.update({ data: data });
+            // 根據健康狀況獲取顏色
+            const qrColor = getQRCodeColor(healthStatus);
+            
+            qrCode.update({ 
+                data: data,
+                dotsOptions: {
+                    color: qrColor,
+                    type: "rounded"
+                }
+            });
             qrCode.append(qrcodeDiv);
         }
         
-        // 列印QR碼（仅打印QR码）
-   function printQRCode() {
+        // 更新printQRCode函数 - 移除了宾客姓名相关代码
+function printQRCode() {
     // 獲取QR碼圖像
     const qrcodeCanvas = document.getElementById('qrcode').querySelector('canvas');
     if (!qrcodeCanvas) {
@@ -1264,7 +1324,11 @@
     // 創建打印窗口
     const printWindow = window.open('', '_blank');
     
-    // 創建打印內容
+    // 獲取打印信息
+    const cabinNumber = document.getElementById('print-cabinNumber').textContent;
+    const groupNumber = document.getElementById('print-groupNumber').textContent;
+    
+    // 創建打印內容 - 移除了宾客姓名
     const printContent = `
         <!DOCTYPE html>
         <html>
@@ -1273,36 +1337,40 @@
             <style>
                 @page {
                     size: auto;
-                    margin: 10mm;
+                    margin: 5mm;
                 }
                 body {
                     margin: 0;
-                    padding: 20px;
+                    padding: 10px;
                     font-family: Arial, sans-serif;
                     text-align: center;
+                    font-size: 12px;
                 }
                 .print-header {
-                    margin-bottom: 20px;
+                    margin-bottom: 8px;
                 }
                 .print-header h3 {
-                    font-size: 24px;
-                    margin-bottom: 5px;
+                    font-size: 14px;
+                    margin-bottom: 3px;
                     color: #333;
                 }
                 .print-header p {
-                    font-size: 16px;
+                    font-size: 10px;
                     color: #666;
+                    margin: 0;
                 }
                 .qrcode-container {
-                    margin: 20px auto;
-                    padding: 10px;
-                    border: 1px solid #eee;
+                    margin: 5px auto;
+                    padding: 5px;
                     display: inline-block;
                 }
                 .info-section {
-                    margin-top: 20px;
-                    text-align: left;
-                    font-size: 14px;
+                    margin-top: 8px;
+                    text-align: center;
+                    font-size: 10px;
+                }
+                .info-section p {
+                    margin: 2px 0;
                 }
                 @media print {
                     .no-print {
@@ -1318,15 +1386,12 @@
             </div>
             <div class="qrcode-container">
                 <img src="${qrcodeCanvas.toDataURL('image/png')}" 
-                     style="width: 60mm; height: 60mm;">
+                     style="width: 2cm; height: 2cm;">
             </div>
             <div class="info-section">
-                <p><strong>注意事項：</strong></p>
-                <ul>
-                    <li>請將此QR碼貼在顯眼位置</li>
-                    <li>確保QR碼清晰可掃描</li>
-                    <li>如有問題，請聯繫工作人員</li>
-                </ul>
+                <p><strong>車廂: ${cabinNumber}</strong></p>
+                <p><strong>組別: ${groupNumber}</strong></p>
+                <!-- 移除了宾客姓名显示 -->
             </div>
         </body>
         </html>
@@ -1536,6 +1601,8 @@
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('dashboard-content').style.display = 'block';
                 loadRecords();
+                // 启动监控页面的自动刷新
+                startDashboardAutoRefresh();
             } catch (error) {
                 let errorMsg = '登入失敗: ';
                 switch(error.code) {
@@ -1575,6 +1642,8 @@
         
         // 登出系統
         function logout() {
+            // 停止自动刷新
+            stopDashboardAutoRefresh();
             auth.signOut();
         }
         
